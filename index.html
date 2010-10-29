@@ -1,10 +1,10 @@
 <!doctype html>  
 
 <!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ --> 
-<!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
-<!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
-<!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
-<!--[if IE 9 ]>    <html lang="en" class="no-js ie9"> <![endif]-->
+<!--[if lt IE 7 ]> <html lang="{{ LANGUAGE_CODE }}" class="no-js ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="{{ LANGUAGE_CODE }}" class="no-js ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="{{ LANGUAGE_CODE }}" class="no-js ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="{{ LANGUAGE_CODE }}" class="no-js ie9"> <![endif]-->
 <!--[if (gt IE 9)|!(IE)]><!--> <html lang="{{ LANGUAGE_CODE }}" class="no-js"> <!--<![endif]-->
 <head>
   <meta charset="utf-8">
@@ -27,7 +27,7 @@
 
   <!-- CSS : implied media="all" -->
   <link rel="stylesheet" href="{{ MEDIA_URL }}css/style.css?v=2" />
-  {% block css %}{% endblock %}
+{% block css %}{% endblock %}
 
   <!-- Uncomment if you are specifically targeting less enabled mobile browsers
   <link rel="stylesheet" media="handheld" href="{{ MEDIA_URL }}css/handheld.css?v=2">  -->
@@ -41,16 +41,65 @@
   <a class="visuallyhidden" href="#main" accesskey="0" >{% trans 'salta al contenido' %}</a>
   <div id="container">
     <header>
-		{% block nav %}{% endblock nav %}
-		{% block intro %}{% endblock intro %}
+		<h1></h1>
+		<aside>
+            <p id="textsize"></p>
+            {% if user.is_authenticated %}
+            <p id="bienvenida">
+                {% trans 'Bienvenido' %} <a href="{% url perfil-edit %}" title="{% trans 'edite tu perfil' %}">{{ user.username }}</a>
+                {% if user.is_staff %}
+                   <a href="/admin/">{% trans "Panel de administración" %}</a>
+                {% endif %}
+                <a href="{% url logout %}?next={{ request.path }}">{% trans '¿Terminar sesión?' %}</a></p>
+            {% else %}
+            <form action="{% url login %}" method="post" id="login-form" >
+                <fieldset> 
+                    <legend>{% trans 'Acceso Usuarios' %}</legend>
+                    <label for="id_username">{% trans 'Usuario' %}:</label> <input type="text" name="username" id="id_username" />
+                    <label for="id_password">{% trans 'Contraseña' %}:</label> <input type="password" name="password" id="id_password" /> 
+                    <input type="hidden" name="this_is_the_login_form" value="1" />
+                    <input type="hidden" name="next" value="{{ request.path }}" />
+                    <button type="submit" ><span>{% trans 'ENTRAR' %}</span></button>
+                </fieldset> 
+            </form>
+            {% endif %}
+            <form action="/i18n/setlang/" method="post" id="lang-form" >
+                <fieldset>
+                    <legend>{% trans 'Idiomas' %}</legend>
+                    <input name="next" type="hidden" value="" />
+                    {% for lang in LANGUAGES %}  
+                    {% ifnotequal lang.0 LANGUAGE_CODE   %}
+                    <button type="submit" name="language" value="{{ lang.0 }}" class="{{ lang.0 }}"  title="{% trans 'cambia idioma a' %} {{ lang.1 }}" >{{ lang.1 }}</button>
+                    {% endifnotequal %}               
+                    {% endfor %}
+                </fieldset>
+           </form>  
+        </aside>
+{% block nav %}
+	<nav id="nav" > 
+        <a  accesskey="1" href=""></a>
+    </nav>
+{% endblock nav %}          
+	<nav class="breadcrumbs">
+	    <a href="/" rel="index" >{% trans 'Inicio' %}</a> > {% block breadcrumbs %}{% endblock breadcrumbs %} 
+	</nav>
     </header>
     
     <article id="main">
-		{% block content %}{% endblock content %}
+		{% if messages %}
+        <ul id="messages">
+            {% for message in messages %}
+            <li id="message_{{ forloop.counter }}"><a href="#" onclick="$('#message_{{ forloop.counter }}').fadeOut(); return false;"><small>{% trans "clear" %}</small></a> {{ message }}</li>
+            {% endfor %}
+        </ul>{% endif %}
+		<header>
+{% block intro %}{% endblock intro %}
+	    </header>
+{% block content %}{% endblock content %}
     </article>
     
     <footer>
-		{% block footer %}{% endblock footer %}
+{% block footer %}{% endblock footer %}
     </footer>
   </div> <!--! end of #container -->
 
@@ -65,7 +114,7 @@
   <!-- scripts concatenated and minified via ant build script-->
   <script src="{{ MEDIA_URL }}js/plugins.js"></script>
   <script src="{{ MEDIA_URL }}js/script.js"></script>
-	{% block js %}{% endblock %}
+{% block js %}{% endblock %}
   <!-- end concatenated and minified scripts-->
   
   
